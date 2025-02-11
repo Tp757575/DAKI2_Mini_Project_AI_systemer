@@ -1,1 +1,2 @@
-Print("Hello World")
+COLOR = [255,255,255]
+print(COLOR)
