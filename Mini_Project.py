@@ -8,7 +8,7 @@ import pandas as pd
 # Load the perspective-fixed board image
 image_path = "C:\\Users\\thoma\\Desktop\\python_work\\Mini_projects\\DAKI2_Mini_Project_AI_systemer\\King Domino dataset\\Cropped and perspective corrected boards\\1.jpg"
 image = cv2.imread(image_path)
-
+    
 # Define the grid size (King Domino uses a 5x5 grid)
 GRID_SIZE = 5
 TILE_SIZE = image.shape[0] // GRID_SIZE  # Assuming the image is square
