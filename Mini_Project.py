@@ -3,6 +3,14 @@ import cv2
 import numpy as np
 import pandas as pd
 
+# --- Global SIFT Setup ---
+sift = cv2.SIFT_create()
+crown_template = cv2.imread(r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Crown background removed.png", cv2.IMREAD_GRAYSCALE)
+if crown_template is None:
+    raise FileNotFoundError("Could not load crown template image.")
+kp_template, desc_template = sift.detectAndCompute(crown_template, None)
+
+
 # --- Config ---
 GRID_SIZE = 5
 TILE_FOLDER = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\King Domino dataset\Cropped and perspective corrected boards"
@@ -31,16 +39,26 @@ def classify_tile_color(tile_hsv):
             return tile_type
     return "Unknown"
 
-def detect_crowns_in_tile(tile_bgr):
-    hsv = cv2.cvtColor(tile_bgr, cv2.COLOR_BGR2HSV)
-    lower_yellow = np.array([22, 150, 150])
-    upper_yellow = np.array([32, 255, 255])
-    mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
-    kernel = np.ones((3, 3), np.uint8)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    crown_contours = [cnt for cnt in contours if 30 < cv2.contourArea(cnt) < 300]
-    return len(crown_contours)
+def detect_crowns_in_tile(tile_bgr, debug=False):
+    gray_tile = cv2.cvtColor(tile_bgr, cv2.COLOR_BGR2GRAY)
+    kp_tile, desc_tile = sift.detectAndCompute(gray_tile, None)
+
+    if desc_tile is None:
+        return 0
+
+    bf = cv2.BFMatcher()
+    matches = bf.knnMatch(desc_template, desc_tile, k=2)
+    good_matches = [m for m, n in matches if m.distance < 0.75 * n.distance]
+
+    if debug:
+        matched_image = cv2.drawMatches(
+            crown_template, kp_template, gray_tile, kp_tile, good_matches, None, flags=2
+        )
+        cv2.imshow("SIFT Matches", matched_image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    return 1 if len(good_matches) >= 8 else 0  # You can tune this threshold
 
 def build_tile_and_crown_maps(image):
     tile_map = np.empty((GRID_SIZE, GRID_SIZE), dtype=object)
