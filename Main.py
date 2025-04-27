@@ -3,32 +3,35 @@ import cv2
 import numpy as np
 import pandas as pd
 
-# --- Global SIFT Setup ---
-sift = cv2.SIFT_create()
-crown_template = cv2.imread(r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Crown background removed.png", cv2.IMREAD_GRAYSCALE)
-if crown_template is None:
-    raise FileNotFoundError("Could not load crown template image.")
-kp_template, desc_template = sift.detectAndCompute(crown_template, None)
-
 # --- Config ---
 GRID_SIZE = 5
 TILE_FOLDER = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\King Domino dataset\Cropped and perspective corrected boards"
-
-# Choose your dataset here!
+CROWN_TEMPLATE_FOLDER = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Cropped crowns"
 GROUND_TRUTH_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\ground_truth_train_board_scores.csv"
-# Or use this for training set evaluation:
-# GROUND_TRUTH_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Ground truth, creating and splitting\ground_truth_train.csv"
 
-# --- Color Ranges for Tile Classification (HSV) ---
+# Color Ranges for Tile Classification (HSV)
 COLOR_RANGES = {
-    "Grass": ((35, 40, 40), (85, 255, 255)),
-    "Wheat Field": ((20, 100, 100), (30, 255, 255)),
-    "Water": ((90, 50, 50), (130, 255, 255)),
+    "Grassland": ((35, 40, 40), (85, 255, 255)),
+    "Field": ((20, 100, 100), (30, 255, 255)),
+    "Lake": ((90, 50, 50), (130, 255, 255)),
     "Swamp": ((40, 20, 20), (70, 150, 150)),
     "Mine": ((0, 0, 0), (50, 50, 50)),
     "Forest": ((25, 50, 30), (40, 255, 100)),
-    "Desert": ((10, 100, 100), (20, 255, 255)),
 }
+
+# --- Load Crown Templates ---
+def load_crown_templates(folder_path):
+    crown_templates = []
+    for file in os.listdir(folder_path):
+        if file.lower().endswith('.png'):
+            template_path = os.path.join(folder_path, file)
+            template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
+            if template is not None:
+                crown_templates.append(template)
+    print(f"Loaded {len(crown_templates)} crown templates from '{folder_path}'.")
+    return crown_templates
+
+crown_templates = load_crown_templates(CROWN_TEMPLATE_FOLDER)
 
 # --- Functions ---
 def load_board_image(filename):
@@ -43,24 +46,18 @@ def classify_tile_color(tile_hsv):
 
 def detect_crowns_in_tile(tile_bgr, debug=False):
     gray_tile = cv2.cvtColor(tile_bgr, cv2.COLOR_BGR2GRAY)
-    kp_tile, desc_tile = sift.detectAndCompute(gray_tile, None)
+    best_match_score = 0
 
-    if desc_tile is None:
-        return 0
-
-    bf = cv2.BFMatcher()
-    matches = bf.knnMatch(desc_template, desc_tile, k=2)
-    good_matches = [m for m, n in matches if m.distance < 0.75 * n.distance]
+    for template in crown_templates:
+        res = cv2.matchTemplate(gray_tile, template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(res)
+        best_match_score = max(best_match_score, max_val)
 
     if debug:
-        matched_image = cv2.drawMatches(
-            crown_template, kp_template, gray_tile, kp_tile, good_matches, None, flags=2
-        )
-        cv2.imshow("SIFT Matches", matched_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        print(f"Best match score: {best_match_score:.2f}")
 
-    return 1 if len(good_matches) >= 8 else 0  # Adjustable threshold
+    threshold = 0.6  # Adjust if needed
+    return 1 if best_match_score >= threshold else 0
 
 def build_tile_and_crown_maps(image):
     tile_map = np.empty((GRID_SIZE, GRID_SIZE), dtype=object)
@@ -113,7 +110,8 @@ def evaluate_against_ground_truth():
     gt_df = pd.read_csv(GROUND_TRUTH_FILE)
 
     for _, row in gt_df.iterrows():
-        filename = row["filename"]
+        image_id = row["image_id"]
+        filename = f"{image_id}.jpg"
         actual_score = row["ground_truth_score"]
 
         image = load_board_image(filename)
