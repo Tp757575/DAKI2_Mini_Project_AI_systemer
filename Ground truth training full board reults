@@ -4,6 +4,8 @@ import numpy as np
 # Define the input and output file paths
 GROUND_TRUTH_TILE_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Ground truth, creating and splitting\ground_truth_train.csv"
 OUTPUT_BOARD_LEVEL_FILE = "ground_truth_train_board_scores.csv"
+#GROUND_TRUTH_TILE_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Ground truth, creating and splitting\ground_truth_test.csv"
+#OUTPUT_BOARD_LEVEL_FILE = "ground_truth_test_board_scores.csv"
 
 # Set the size of the board grid (5x5 tiles in this case)
 GRID_SIZE = 5

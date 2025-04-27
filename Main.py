@@ -7,7 +7,8 @@ import pandas as pd
 GRID_SIZE = 5
 TILE_FOLDER = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\King Domino dataset\Cropped and perspective corrected boards"
 CROWN_TEMPLATE_FOLDER = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Cropped crowns"
-GROUND_TRUTH_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\ground_truth_train_board_scores.csv"
+# GROUND_TRUTH_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\ground_truth_train_board_scores.csv"
+GROUND_TRUTH_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\ground_truth_test_board_scores.csv"
 
 # Define HSV color ranges for different terrain types
 COLOR_RANGES = {
