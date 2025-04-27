@@ -129,6 +129,10 @@ def calculate_score(tile_map, crown_map):
 def evaluate_against_ground_truth():
     gt_df = pd.read_csv(GROUND_TRUTH_FILE)
 
+    total_absolute_error = 0
+    total_relative_accuracy = 0
+    count = 0
+
     for _, row in gt_df.iterrows():
         image_id = row["image_id"]
         filename = f"{image_id}.jpg"
@@ -138,7 +142,18 @@ def evaluate_against_ground_truth():
         tile_map, crown_map = build_tile_and_crown_maps(image)
         predicted_score = calculate_score(tile_map, crown_map)
 
-        print(f"{filename}: Predicted = {predicted_score}, Actual = {actual_score}, Error = {abs(predicted_score - actual_score)}")
+        error = abs(predicted_score - actual_score)
+        relative_accuracy = (1 - error / actual_score) * 100 if actual_score != 0 else 0
+
+        total_absolute_error += error
+        total_relative_accuracy += relative_accuracy
+        count += 1
+
+    mean_absolute_error = total_absolute_error / count
+    mean_relative_accuracy = total_relative_accuracy / count
+
+    print(f"Mean Absolute Error (MAE): {mean_absolute_error:.2f}")
+    print(f"Mean Relative Accuracy (MRA): {mean_relative_accuracy:.2f}%")
 
 # Run the evaluation if this file is run as a script
 if __name__ == "__main__":
