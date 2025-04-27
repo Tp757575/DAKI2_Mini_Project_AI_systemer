@@ -10,11 +10,14 @@ if crown_template is None:
     raise FileNotFoundError("Could not load crown template image.")
 kp_template, desc_template = sift.detectAndCompute(crown_template, None)
 
-
 # --- Config ---
 GRID_SIZE = 5
 TILE_FOLDER = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\King Domino dataset\Cropped and perspective corrected boards"
-GROUND_TRUTH_FILE = "ground_truth_scores.csv"
+
+# Choose your dataset here!
+GROUND_TRUTH_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Ground truth, creating and splitting\ground_truth_test.csv"
+# Or use this for training set evaluation:
+# GROUND_TRUTH_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Ground truth, creating and splitting\ground_truth_train.csv"
 
 # --- Color Ranges for Tile Classification (HSV) ---
 COLOR_RANGES = {
@@ -28,7 +31,6 @@ COLOR_RANGES = {
 }
 
 # --- Functions ---
-
 def load_board_image(filename):
     return cv2.imread(os.path.join(TILE_FOLDER, filename))
 
@@ -58,7 +60,7 @@ def detect_crowns_in_tile(tile_bgr, debug=False):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    return 1 if len(good_matches) >= 8 else 0  # You can tune this threshold
+    return 1 if len(good_matches) >= 8 else 0  # Adjustable threshold
 
 def build_tile_and_crown_maps(image):
     tile_map = np.empty((GRID_SIZE, GRID_SIZE), dtype=object)
