@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-GROUND_TRUTH_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Ground truth with crown count.csv"
+GROUND_TRUTH_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Ground truth, creating and splitting\Ground truth with crown count.csv"
 TRAIN_FILE = "ground_truth_train.csv"
 TEST_FILE = "ground_truth_test.csv"
 TRAIN_SPLIT_RATIO = 0.8  # 80% train, 20% test
