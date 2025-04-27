@@ -1,14 +1,18 @@
 import pandas as pd
 import numpy as np
 
+# Define the input and output file paths
 GROUND_TRUTH_TILE_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Ground truth, creating and splitting\ground_truth_train.csv"
 OUTPUT_BOARD_LEVEL_FILE = "ground_truth_train_board_scores.csv"
-GRID_SIZE = 5 # Because there is being worked with 5 by 5 tiles in a grid
 
-# Load tile-level ground truth
+# Set the size of the board grid (5x5 tiles in this case)
+GRID_SIZE = 5
+
+# Load the tile-level ground truth dataset
 tile_df = pd.read_csv(GROUND_TRUTH_TILE_FILE)
 
-# Helper to parse terrain and crown count
+# Helper function to split a label into terrain type and crown count
+# For example, "Forest 1" becomes ("Forest", 1)
 def parse_label(label):
     parts = label.rsplit(' ', 1)
     if len(parts) == 2:
@@ -17,27 +21,29 @@ def parse_label(label):
         terrain, crowns = label, 0
     return terrain, crowns
 
-# Build board-level scores
+# This list will store the computed board-level scores
 board_scores = []
 
+# Group the tiles by their board (image_id) and calculate the score for each board
 for image_id, group in tile_df.groupby("image_id"):
-    # Initialize empty tile_map and crown_map
+    # Initialize empty maps to store the terrain type and crown count for each tile
     tile_map = np.empty((GRID_SIZE, GRID_SIZE), dtype=object)
     crown_map = np.zeros((GRID_SIZE, GRID_SIZE), dtype=int)
 
-    # Fill tile and crown maps
+    # Fill the tile_map and crown_map with data from the CSV
     for _, row in group.iterrows():
         x, y, label = row["x"], row["y"], row["label"]
-        col = x // 100  # Assuming 100x100 pixel tiles
+        col = x // 100  # Each tile is assumed to be 100x100 pixels
         row_idx = y // 100
         terrain, crowns = parse_label(label)
         tile_map[row_idx, col] = terrain
         crown_map[row_idx, col] = crowns
 
-    # Scoring
+    # Prepare to calculate the score by marking all tiles as unvisited
     visited = np.zeros((GRID_SIZE, GRID_SIZE), dtype=bool)
     total_score = 0
 
+    # Depth-First Search function to find connected regions of the same terrain type
     def dfs(r, c, terrain_type):
         if r < 0 or r >= GRID_SIZE or c < 0 or c >= GRID_SIZE:
             return 0, 0
@@ -51,6 +57,7 @@ for image_id, group in tile_df.groupby("image_id"):
             crowns += c_
         return tiles, crowns
 
+    # Go through each tile and calculate the total board score
     for i in range(GRID_SIZE):
         for j in range(GRID_SIZE):
             if not visited[i, j] and tile_map[i, j] is not None:
@@ -58,9 +65,10 @@ for image_id, group in tile_df.groupby("image_id"):
                 if crowns > 0:
                     total_score += size * crowns
 
+    # Save the computed score along with the board ID
     board_scores.append({"image_id": image_id, "ground_truth_score": total_score})
 
-# Save the new board-level ground truth
+# Save all board scores into a new CSV file
 board_df = pd.DataFrame(board_scores)
 board_df.to_csv(OUTPUT_BOARD_LEVEL_FILE, index=False)
 

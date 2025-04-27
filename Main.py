@@ -3,24 +3,26 @@ import cv2
 import numpy as np
 import pandas as pd
 
-# --- Config ---
+# Define constants for board size and file paths
 GRID_SIZE = 5
 TILE_FOLDER = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\King Domino dataset\Cropped and perspective corrected boards"
 CROWN_TEMPLATE_FOLDER = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Cropped crowns"
 GROUND_TRUTH_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\ground_truth_train_board_scores.csv"
 
-# Color Ranges for Tile Classification (HSV)
+# Define HSV color ranges for different terrain types
 COLOR_RANGES = {
     "Forest": ((35, 30, 20), (55, 255, 120)),
-    "Field": ((15, 240, 50), (30, 255, 190)),       
-    "Lake": ((105, 200, 50), (115, 255, 160)),      
-    "Mine": ((0, 30, 15), (30, 255, 200)),          
-    "Grassland": ((33, 50, 120), (45, 255, 160)),   
-    "Swamp": ((2, 70, 35), (22, 220, 130))          
+    "Field": ((15, 240, 50), (30, 255, 190)),
+    "Lake": ((105, 200, 50), (115, 255, 160)),
+    "Mine": ((0, 30, 15), (30, 255, 200)),
+    "Grassland": ((33, 50, 120), (45, 255, 160)),
+    "Swamp": ((2, 70, 35), (22, 220, 130))
 }
+
+# Define the HSV color range expected for crowns
 CROWN_HSV_RANGE = ((10, 30, 140), (30, 255, 255))
 
-# --- Load Crown Templates ---
+# Function to load all crown template images into a list
 def load_crown_templates(folder_path):
     crown_templates = []
     for file in os.listdir(folder_path):
@@ -32,12 +34,14 @@ def load_crown_templates(folder_path):
     print(f"Loaded {len(crown_templates)} crown templates from '{folder_path}'.")
     return crown_templates
 
+# Load crown templates once at the start
 crown_templates = load_crown_templates(CROWN_TEMPLATE_FOLDER)
 
-# --- Functions ---
+# Load a full board image based on the filename
 def load_board_image(filename):
     return cv2.imread(os.path.join(TILE_FOLDER, filename))
 
+# Classify a tile by checking which HSV color range it falls into
 def classify_tile_color(tile_hsv):
     for tile_type, (lower, upper) in COLOR_RANGES.items():
         mask = cv2.inRange(tile_hsv, np.array(lower), np.array(upper))
@@ -45,8 +49,8 @@ def classify_tile_color(tile_hsv):
             return tile_type
     return "Unknown"
 
+# Detect if a crown is present in a tile using HSV pre-filtering and template matching
 def detect_crowns_in_tile(tile_bgr, debug=False):
-    # HSV filtering first
     tile_hsv = cv2.cvtColor(tile_bgr, cv2.COLOR_BGR2HSV)
     lower, upper = CROWN_HSV_RANGE
     crown_mask = cv2.inRange(tile_hsv, np.array(lower), np.array(upper))
@@ -57,7 +61,6 @@ def detect_crowns_in_tile(tile_bgr, debug=False):
             print("No crown-like color detected.")
         return 0
 
-    # If crown color detected, proceed with template matching
     gray_tile = cv2.cvtColor(tile_bgr, cv2.COLOR_BGR2GRAY)
     gray_tile = cv2.GaussianBlur(gray_tile, (3, 3), 0)
 
@@ -70,9 +73,10 @@ def detect_crowns_in_tile(tile_bgr, debug=False):
     if debug:
         print(f"Best match score: {best_match_score:.2f}")
 
-    threshold = 0.9  # Best threshold based on experiments
+    threshold = 0.9  # Based on experiments, this threshold gave the best balance
     return 1 if best_match_score >= threshold else 0
 
+# Build maps that show what terrain and how many crowns are at each tile
 def build_tile_and_crown_maps(image):
     tile_map = np.empty((GRID_SIZE, GRID_SIZE), dtype=object)
     crown_map = np.zeros((GRID_SIZE, GRID_SIZE), dtype=int)
@@ -95,6 +99,7 @@ def build_tile_and_crown_maps(image):
 
     return tile_map, crown_map
 
+# Calculate the total board score based on connected terrain regions and crown counts
 def calculate_score(tile_map, crown_map):
     visited = np.zeros((GRID_SIZE, GRID_SIZE), dtype=bool)
     total_score = 0
@@ -120,6 +125,7 @@ def calculate_score(tile_map, crown_map):
                     total_score += size * crowns
     return total_score
 
+# Function to evaluate all boards against the ground truth data
 def evaluate_against_ground_truth():
     gt_df = pd.read_csv(GROUND_TRUTH_FILE)
 
@@ -134,6 +140,6 @@ def evaluate_against_ground_truth():
 
         print(f"{filename}: Predicted = {predicted_score}, Actual = {actual_score}, Error = {abs(predicted_score - actual_score)}")
 
-# --- Run Evaluation ---
+# Run the evaluation if this file is run as a script
 if __name__ == "__main__":
     evaluate_against_ground_truth()
