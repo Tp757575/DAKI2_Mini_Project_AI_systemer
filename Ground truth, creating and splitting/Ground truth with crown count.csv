@@ -494,11 +494,11 @@ image_id,x,y,label
 20,200,300,Grassland 0
 20,300,300,Grassland 2
 20,400,300,Lake 1
-20,0,400,Lake 0
-20,100,400,Lake 1
-20,200,400,Lake 0
-20,300,400,Lake 0
-20,400,400,Lake 0
+20,0,400,Field 0
+20,100,400,Field 1
+20,200,400,Field 0
+20,300,400,Field 0
+20,400,400,Field 0
 21,0,0,Swamp 0
 21,100,0,Grassland 0
 21,200,0,Swamp 2

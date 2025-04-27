@@ -1,15 +1,14 @@
 import pandas as pd
 import numpy as np
 
-# --- Config ---
 GROUND_TRUTH_TILE_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Mini_Project_AI_systemer\Ground truth, creating and splitting\ground_truth_train.csv"
 OUTPUT_BOARD_LEVEL_FILE = "ground_truth_train_board_scores.csv"
-GRID_SIZE = 5  # Assuming a 5x5 board
+GRID_SIZE = 5 # Because there is being worked with 5 by 5 tiles in a grid
 
-# --- Load tile-level ground truth ---
+# Load tile-level ground truth
 tile_df = pd.read_csv(GROUND_TRUTH_TILE_FILE)
 
-# --- Helper to parse terrain and crown count ---
+# Helper to parse terrain and crown count
 def parse_label(label):
     parts = label.rsplit(' ', 1)
     if len(parts) == 2:
@@ -18,7 +17,7 @@ def parse_label(label):
         terrain, crowns = label, 0
     return terrain, crowns
 
-# --- Build board-level scores ---
+# Build board-level scores
 board_scores = []
 
 for image_id, group in tile_df.groupby("image_id"):
@@ -61,7 +60,7 @@ for image_id, group in tile_df.groupby("image_id"):
 
     board_scores.append({"image_id": image_id, "ground_truth_score": total_score})
 
-# --- Save the new board-level ground truth ---
+# Save the new board-level ground truth
 board_df = pd.DataFrame(board_scores)
 board_df.to_csv(OUTPUT_BOARD_LEVEL_FILE, index=False)
 
