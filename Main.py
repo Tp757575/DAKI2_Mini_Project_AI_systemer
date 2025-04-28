@@ -12,12 +12,12 @@ GROUND_TRUTH_FILE = r"C:\Users\thoma\Desktop\python_work\Mini_projects\DAKI2_Min
 
 # Define HSV color ranges for different terrain types
 COLOR_RANGES = {
-    "Forest": ((35, 30, 20), (55, 255, 120)),
-    "Field": ((15, 240, 50), (30, 255, 190)),
-    "Lake": ((105, 200, 50), (115, 255, 160)),
-    "Mine": ((0, 30, 15), (30, 255, 200)),
-    "Grassland": ((33, 50, 120), (45, 255, 160)),
-    "Swamp": ((2, 70, 35), (22, 220, 130))
+    "Forest": ((35, 120, 15), (55, 210, 80)),
+    "Field": ((20, 240, 190), (30, 255, 230)),
+    "Lake": ((105, 240, 120), (115, 255, 260)),
+    "Mine": ((0, 0, 0), (30, 255, 200)),
+    "Grassland": ((40, 180, 70), (55, 255, 130)),
+    "Swamp": ((10, 40, 10), (40, 220, 160))
 }
 
 # Define the HSV color range expected for crowns
@@ -41,6 +41,16 @@ crown_templates = load_crown_templates(CROWN_TEMPLATE_FOLDER)
 # Load a full board image based on the filename
 def load_board_image(filename):
     return cv2.imread(os.path.join(TILE_FOLDER, filename))
+
+# Normalize the input image by equalizing the brightness (Value channel) in HSV color space. Reduces lighting variations.
+def normalize_image(image):
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    h, s, v = cv2.split(hsv)
+    v = cv2.equalizeHist(v)  # Equalize the brightness
+    hsv_eq = cv2.merge((h, s, v))
+    normalized = cv2.cvtColor(hsv_eq, cv2.COLOR_HSV2BGR)
+    return normalized
+
 
 # Classify a tile by checking which HSV color range it falls into
 def classify_tile_color(tile_hsv):
@@ -140,6 +150,7 @@ def evaluate_against_ground_truth():
         actual_score = row["ground_truth_score"]
 
         image = load_board_image(filename)
+        image = normalize_image(image)
         tile_map, crown_map = build_tile_and_crown_maps(image)
         predicted_score = calculate_score(tile_map, crown_map)
 
